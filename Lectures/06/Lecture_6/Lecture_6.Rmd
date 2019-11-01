@@ -3,7 +3,7 @@ title: "Lecture_6 R Functions"
 author: "Howard Wang"
 date: "10/18/2019"
 output:
-  html_document: default
+  github_document: default
   pdf_document: default
 ---
 
