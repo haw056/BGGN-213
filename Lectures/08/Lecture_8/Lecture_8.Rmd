@@ -3,8 +3,7 @@ title: "Lecture_8"
 author: "Howard Wang"
 date: "10/25/2019"
 output:
-  pdf_document: default
-  github_document: default
+  github_document
 ---
 
 ```{r setup, include=FALSE}
