@@ -1,0 +1,100 @@
+---
+title: "Lecture_8"
+author: "Howard Wang"
+date: "10/25/2019"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+#k-menas
+```{r}
+tmp <- c(rnorm(30,-3), rnorm(30,3)) 
+x <- cbind(x=tmp, y=rev(tmp))
+
+plot(x)
+```
+
+```{r}
+k <- kmeans(x, centers = 2, nstart = 20)
+```
+
+```{r}
+plot(x, col = k$cluster)
+points(k$centers, col = "blue")
+```
+
+## Hierarchical clustering
+```{r}
+hc <- hclust (dist(x))
+```
+
+
+```{r}
+plot(hc)
+abline(h = 6, col = "red")
+grps <- cutree(hc, h = 4)
+plot (x, col = grps)
+```
+
+```{r}
+x <- rbind(
+matrix(rnorm(100, mean=0, sd = 0.3), ncol = 2), 
+matrix(rnorm(100, mean = 1, sd = 0.3), ncol = 2), 
+matrix(c(rnorm(50, mean = 1, sd = 0.3), 
+        rnorm(50, mean = 0, sd = 0.3)), ncol = 2))
+colnames(x) <- c("x", "y")
+plot(x)
+
+col <- as.factor( rep(c("c1","c2","c3"), each=50) )
+
+plot(x, col=col)
+```
+
+```{r}
+x <- rbind(
+matrix(rnorm(100, mean=0, sd = 0.3), ncol = 2), 
+matrix(rnorm(100, mean = 1, sd = 0.3), ncol = 2), 
+matrix(c(rnorm(50, mean = 1, sd = 0.3), 
+        rnorm(50, mean = 0, sd = 0.3)), ncol = 2))
+colnames(x) <- c("x", "y")
+hc <- hclust(dist(x))
+plot(hc)
+grps <- cutree(hc, k = 3)
+plot(x, col=grps)
+
+```
+
+```{r}
+mydata <- read.csv("https://tinyurl.com/expression-CSV", row.names=1)
+head(mydata)
+```
+
+```{r}
+pca <- prcomp(t(mydata), scale=TRUE)
+attributes(pca)
+plot(pca$x[,1], pca$x[,2])
+pca.var <- pca$sdev^2 
+pca.var.per <- round(pca.var/sum(pca.var)*100, 1)
+barplot(pca.var.per, main="Scree Plot",
+xlab="Principal Component", ylab="Percent Variation")
+```
+
+```{r}
+x <- read.csv("https://bioboot.github.io/bggn213_f17/class-material/UK_foods.csv", row.names=1)
+barplot(as.matrix(x), beside=F, col=rainbow(nrow(x)))
+pairs(x, col=rainbow(10), pch=16)
+pca <- prcomp( t(x) )
+summary(pca)
+plot(pca$x[,1:2], xlab="PC1", ylab="PC2", xlim=c(-270,500))
+text(pca$x[,1], pca$x[,2], colnames(x), col = c("red", "blue"))
+```
+
+
+
+
+

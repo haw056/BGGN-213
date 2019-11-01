@@ -1,0 +1,202 @@
+---
+title: "Class 9 Unsupervised Learning Mini-Project"
+author: "Barry Grant"
+date: "10/30/2019"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Data Input
+
+```{r}
+input.file <- "https://bioboot.github.io/bimm143_S18/class-material/WisconsinCancer.csv"
+wisc.df <- read.csv(input.file)
+```
+
+```{r}
+#head(wisc.df)
+```
+
+Here we examine data from `r nrow(wisc.df)` patient samples.
+```{r}
+x <- table(wisc.df$diagnosis)
+x
+```
+
+In this data-set we have `r x["M"]` cancer and `r["B"]` non-cancer
+
+We will not consider the columns `id`, `diagnosis` or the funny weird last `X` column. In other words we will take cols 3 to 32 only.
+
+```{r}
+# Convert the features of the data: wisc.data
+wisc.data <- as.matrix( wisc.df[,3:32] )
+```
+
+> Q. How many variables/features in the data are suffixed with _mean?
+
+```{r}
+colnames(wisc.df)
+```
+
+```{r}
+grep("_mean", colnames(wisc.df), value=TRUE)
+```
+
+To find out how many there are I can call `length()` on the result of `grep()`.
+
+```{r}
+length( grep("_mean", colnames(wisc.df), value=TRUE) )
+```
+
+
+## Principal Component Analysis
+
+The next step in our analysis is to perform principal component analysis (PCA) on wisc.data.
+
+Do we need to scale the data?
+
+```{r}
+ round( apply(wisc.data, 2, sd), 3)
+```
+
+
+Looks like we need to use `scale=TRUE` here as our data are all over the shop...
+
+```{r}
+# Perform PCA on wisc.data by completing the following code
+wisc.pr <- prcomp( wisc.data, scale=TRUE )
+summary(wisc.pr)
+```
+
+Plot PC1 vs PC2 and color by M/B cancer/non-cancer diagnosis
+
+```{r}
+# without color :-(
+plot(wisc.pr$x[,1], wisc.pr$x[,2])
+```
+
+
+```{r}
+# with color :-)
+plot(wisc.pr$x[,1:2], col=wisc.df$diagnosis)
+```
+
+
+```{r}
+x <- summary(wisc.pr)
+```
+
+```{r}
+x$importance[,"PC1"]
+```
+
+The first PC captures `r x$importance[2,"PC1"] *100` of the original variance in the dataset.
+
+> Q How many principal components (PCs) are required to describe at least 70% of the original variance in the data?
+
+```{r}
+which(x$importance[3,] > 0.7)[1]
+```
+
+And a scree-plot of the proportion of variance.
+
+```{r}
+plot(wisc.pr)
+```
+
+and a optional fancy one from an external package that I need to install from CRAN
+
+
+```{r}
+library(factoextra)
+fviz_eig(wisc.pr, addlabels = TRUE)
+```
+
+Our main result is super interesting showing a separation of cancer (red) from non-cancer (black) samples. We will now explore this more...
+
+```{r}
+plot(wisc.pr$x[,1:2], col=wisc.df$diagnosis)
+```
+
+
+## Clustering
+
+Let's try hierarchical clustering of case data (i.e. the raw input data) first.
+
+```{r}
+# Scale the wisc.data data: data.scaled
+data.scaled <- scale(wisc.data)
+
+wisc.hclust <- hclust( dist(data.scaled) )
+plot(wisc.hclust)
+```
+
+This looks quite awful! 
+
+Lets now try clustering in PCA space :-)
+
+We will take the results of `prcomp()` and build our distance matrix in PC space rather than from our raw data.
+
+```{r}
+# Take first 7 PCs
+wisc.pr.hclust <- hclust( dist(wisc.pr$x[,1:7]), method="ward.D2" )
+plot(wisc.pr.hclust)
+```
+
+
+This tree looks much better and we can see that cutting the tree at a height ~70 would yield two clear clusters. Lets check
+
+
+```{r}
+plot(wisc.pr.hclust)
+abline(h=70, col="red")
+```
+
+And the cluster membership vector can be obtained from `cutree()`
+
+```{r}
+grps <- cutree(wisc.pr.hclust, h=70)
+table(grps)
+```
+
+```{r}
+table(wisc.df$diagnosis)
+```
+
+Lets compare i.e. cross tabulate these results:
+
+```{r}
+table(grps, wisc.df$diagnosis)
+```
+
+
+## Prediction
+
+We will use the predict() function that will take our PCA model from before and new cancer cell data and project that data onto our PCA space.
+
+```{r}
+url <- "https://tinyurl.com/new-samples-CSV"
+new <- read.csv(url)
+npc <- predict(wisc.pr, newdata=new)
+npc
+```
+
+Add these new patient predictions to our main result figure PC1 vs PC2 plot.
+
+```{r}
+plot(wisc.pr$x[,1:2], col=wisc.df$diagnosis)
+points(npc[,1], npc[,2], col="blue", pch=15, cex=3)
+text(npc[,1], npc[,2], labels=c(1,2), col="white")
+```
+
+
+```{r}
+wisc.pr$scale
+```
+
+
