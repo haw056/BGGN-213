@@ -1,0 +1,78 @@
+---
+title: "Lecture_11"
+output: github_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## What is in the PDB database
+
+```{r}
+data <- read.csv("Data Export Summary.csv")
+```
+
+# Q:Determine the percentage of structures solved by X-Ray and Electron Microscopy. 
+
+```{r}
+sum(data$Total)
+ans <-data$Total/sum(data$Total)*100
+names(ans) <- data$Experimental.Method
+round(ans,2)
+```
+
+# Q:Also can you determine what proportion of structures are protein?
+
+```{r}
+sum(data$Proteins)/sum(data$Total)*100
+```
+
+```{r}
+library(bio3d)
+pdb <- read.pdb("1hsg")
+```
+
+```{r}
+aa321(pdb$atom[pdb$calpha,"resid"])
+```
+
+#First slelect "protein" then write out a file: "1hsg_protein.pdb"
+```{r}
+head(pdb$atom)
+prot <- atom.select(pdb,"protein", value=T)
+write.pdb(prot, file="1hsg_protein.pdb")
+```
+
+#The same for the ligand
+```{r}
+lig <- atom.select(pdb, "ligand", value=T)
+write.pdb(lig, file="1hsg_ligand.pdb")
+```
+
+```{r}
+ca.inds <- atom.select(pdb, "calpha")
+```
+
+```{r}
+library("bio3d.view")
+view(pdb, "ligand", col="sse")
+```
+
+```{r}
+pdb <- read.pdb("1hel")
+modes <- nma(pdb)
+m7 <- mktrj(modes, mode=7, file="mode_7.pdb")
+view(m7, col=vec2color( rmsf(m7) ))
+```
+
+
+
+
+
+
+
+
+
+
+
