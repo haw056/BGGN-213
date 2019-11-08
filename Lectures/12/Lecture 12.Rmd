@@ -34,8 +34,23 @@ protein <- atom.select(pdb,"protein", value=T)
 write.pdb(protein, file="1hsg_protein.pdb")
 ```
 
+```{r}
+res <- read.pdb("all.pdbqt", multi=TRUE)
+write.pdb(res, "results.pdb")
+```
 
+```{r}
+ori <- read.pdb("ligand.pdbqt")
+rmsd(ori, res)
+```
 
+```{r}
+library(bio3d)
+pdb <- read.pdb("1HEL")
+modes <- nma(pdb) 
+plot(modes, sse=pdb)
+mktrj(modes, mode=7, file="nma_7.pdb")
+```
 
 
 
