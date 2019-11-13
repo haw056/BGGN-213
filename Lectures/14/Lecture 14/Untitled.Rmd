@@ -1,0 +1,156 @@
+---
+title: "Transcriptomics and the analysis of RNA-Seq data"
+output: github_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Setup bioconductor DESeq2
+```{r eval=FALSE}
+install.packages("BiocManager")
+BiocManager::install()
+# For this class, you'll also need DESeq2:
+BiocManager::install("DESeq2")
+```
+
+# Data for today's class
+```{r}
+counts <- read.csv("airway_scaledcounts.csv", stringsAsFactors = FALSE)
+metadata <-  read.csv("airway_metadata.csv", stringsAsFactors = FALSE)
+```
+
+#Now, take a look at each
+```{r}
+head(counts)
+head(metadata)
+```
+
+# How many genes are in this dataset?
+```{r}
+nrow(counts)
+ncol(counts)-1
+```
+
+# Lets make sure metadata id col match the conames of counts
+```{r}
+# function all is useful for looking values of all true
+all(colnames(counts)[-1]==metadata$id)
+```
+
+# Analysis: compare the control to drug treated
+
+#First we need to access the columns of out countDara that are control and then find their mean
+
+```{r}
+control <- metadata[metadata[,"dex"]=="control",]
+control.mean <- rowSums( counts[ ,control$id] )/length(control$id)
+names(control.mean) <- counts$ensgene
+```
+
+#Second we need to access the columns of out countDara that are treated and then find their mean
+
+```{r}
+treated <- metadata[metadata[,"dex"]=="treated",]
+treated.mean <- rowSums( counts[ ,treated$id] )/length(treated$id)
+names(treated.mean) <- counts$ensgene
+```
+
+# We will combine our meancount data for bookkeeping purposes.
+```{r}
+meancounts <- data.frame(control.mean, treated.mean)
+plot(meancounts[,1],meancounts[,2], xlab="Control", ylab="Treated")
+```
+
+# Plot in a log scale
+
+```{r}
+plot(meancounts[,1],meancounts[,2], xlab="Control", ylab="Treated", log="xy")
+```
+
+## Fold change
+```{r}
+meancounts$log2fc <- log2(meancounts[,"treated.mean"]/meancounts[,"control.mean"])
+head(meancounts)
+```
+
+## There are a couple of “weird” results. Namely, the NaN ("not a number") and -Inf (negative infinity) results.
+
+## The NaN is returned when you divide by zero and try to take the log. The -Inf is returned when you try to take the log of zero. It turns out that there are a lot of genes with zero expression. Let’s filter our data to remove these genes. Again inspect your result (and the intermediate steps) to see if things make sense to you
+
+```{r}
+zero.vals <- which(meancounts[,1:2]==0, arr.ind=TRUE)
+to.rm <- unique(zero.vals[,1])
+mycounts <- meancounts[-to.rm,]
+nrow(mycounts)
+```
+
+## A common threshold used for calling something differentially expressed is a log2(FoldChange) of greater than 2 or less than -2. Let’s filter the dataset both ways to see how many genes are up or down-regulated.
+
+```{r}
+up.ind <- mycounts$log2fc > 2
+sum(up.ind)
+down.ind <- mycounts$log2fc < (-2)
+sum(down.ind)
+```
+
+## Adding annotation data
+
+```{r eval=FALSE}
+BiocManager::install("AnnotationDbi")
+BiocManager::install("org.Hs.eg.db")
+library("AnnotationDbi")
+library("org.Hs.eg.db")
+```
+
+## See waht's availble of org.Hs.eg.db
+
+```{r}
+columns(org.Hs.eg.db)
+```
+
+```{r}
+mycounts$symbol <- mapIds(org.Hs.eg.db,
+                     keys=row.names(mycounts), # Our genenames
+                     keytype="ENSEMBL",        # The format of our genenames
+                     column="SYMBOL",          # The new format we want to add
+                     multiVals="first")
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
