@@ -1,0 +1,69 @@
+---
+title: "Lecture 16"
+author: "Howard Wang"
+date: "11/20/2019"
+output: Github_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Requirements
+```{r}
+library(RCy3)
+library(igraph)
+library(RColorBrewer)
+```
+
+## First Contact
+```{r}
+# Test the connection to Cytoscape.
+cytoscapePing()
+cytoscapeVersionInfo()
+```
+## Make the fist graph
+
+```{r}
+g <- makeSimpleIgraph()
+createNetworkFromIgraph(g,"myGraph")
+fig <- exportImage(filename="demo", type="png", height=350)
+```
+
+##Switch Styles
+
+```{r}
+setVisualStyle("Marquee")
+styles <- getVisualStyleNames()
+styles
+```
+
+##Read our metagenomics data
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
